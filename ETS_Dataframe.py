@@ -168,34 +168,75 @@ class ETS_Dataframe:
 
     @property
     def sct_row_p2p(self):
-        return self.mct_grid_max - self.mct_grid_min
+        return self.sct_row_max - self.sct_row_min
 
     @property
     def sct_row_rms(self):
         # alternative method
-        # return np.sqrt(((self.mct_grid - self.mct_grid_mean) ** 2).mean(axis=0))
-        return np.sqrt(np.var(self.mct_grid, axis=0))
+        return np.sqrt(np.var(self.sct_row, axis=0))
 
     @property
-    def mct_signal_position(self):
-        n, y_node, x_node = np.unravel_index(self.mct_grid.argmax(), self.mct_grid.shape)
-        return n, y_node, x_node
+    def sct_row_signal_position(self):
+        n, y_node = np.unravel_index(self.sct_row.argmax(), self.sct_row.shape)
+        return n, y_node
 
     @property
-    def mct_signal_max(self):
-        _, y_node, x_node = self.mct_signal_position
-        return self.mct_grid_max[y_node][x_node]
+    def sct_row_signal_max(self):
+        _, y_node = self.sct_row_signal_position
+        return self.sct_row_max[y_node]
 
     @property
-    def mct_signal_min(self):
-        _, y_node, x_node = self.mct_signal_position
-        return self.mct_grid_min[y_node][x_node]
+    def sct_row_signal_min(self):
+        _, y_node = self.sct_row_signal_position
+        return self.sct_row_min[y_node]
 
     @property
-    def mct_signal_mean(self):
-        _, y_node, x_node = self.mct_signal_position
-        return self.mct_grid_mean[y_node][x_node]
+    def sct_row_signal_mean(self):
+        _, y_node = self.sct_row_signal_position
+        return self.sct_row_mean[y_node]
 
+    # *******************************************************************
+    # ************************  self cap columns field ******************
+    # *******************************************************************
 
+    @property
+    def sct_col_max(self):
+        return self.sct_col.max(axis=0)
 
+    @property
+    def sct_col_min(self):
+        return self.sct_col.min(axis=0)
+
+    @property
+    def sct_col_mean(self):
+        return self.sct_col.mean(axis=0)
+
+    @property
+    def sct_col_p2p(self):
+        return self.sct_col_max - self.sct_col_min
+
+    @property
+    def sct_col_rms(self):
+        # alternative method
+        return np.sqrt(np.var(self.sct_col, axis=0))
+
+    @property
+    def sct_col_signal_position(self):
+        n, y_node = np.unravel_index(self.sct_col.argmax(), self.sct_col.shape)
+        return n, y_node
+
+    @property
+    def sct_col_signal_max(self):
+        _, y_node = self.sct_col_signal_position
+        return self.sct_col_max[y_node]
+
+    @property
+    def sct_col_signal_min(self):
+        _, y_node = self.sct_col_signal_position
+        return self.sct_col_min[y_node]
+
+    @property
+    def sct_col_signal_mean(self):
+        _, y_node = self.sct_col_signal_position
+        return self.sct_col_mean[y_node]
 

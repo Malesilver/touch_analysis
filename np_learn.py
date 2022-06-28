@@ -1,7 +1,9 @@
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-a=np.random.randint(1,10,(4,4))
+
+# todo np.mask np.NaN用法
+# a=np.random.randint(1,10,(4,4))
 
 # mask = a>3
 # ma = np.ma.masked_array(a,~mask)
@@ -15,7 +17,17 @@ a=np.random.randint(1,10,(4,4))
 # sns.heatmap(a)
 # plt.show()
 
-print(a.mean(axis=0).shape)
-plt.figure()
-plt.bar(range(len(a)),a.mean(axis=0))
-plt.show()
+# todo numpy 柱状图
+# print(a.mean(axis=0).shape)
+# plt.figure()
+# plt.bar(range(len(a)),a.mean(axis=0))
+# plt.show()
+
+# todo numpy argmax
+
+a = np.random.randint(1,10,(1,8))
+
+print(a)
+
+print(a.argmax())
+print(np.unravel_index(a.argmax(), a.shape))
