@@ -1,0 +1,13 @@
+--pattern_folder
+BOE_noise_test\BOE_0530_Y4-Y35\z10
+--prefix_notouch
+z10_wo
+--prefix_touch
+z10_w
+--report_vendor
+BOE
+--plot_noise_p2p
+--plot_all_touch_sigal
+--log_grid_rawdata
+--plot_noise_rms
+--plot_noise_p2p_annotated
