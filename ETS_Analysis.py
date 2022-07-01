@@ -10,8 +10,10 @@ import argparse
 from matplotlib import patches
 from phase_utilities import *
 from ETS_Dataframe import HEADER_ETS, ETS_Dataframe
+
 file_dir = os.path.dirname(__file__)  # the directory that class "option" resides in
 pd.set_option('display.max_columns', None)
+
 
 class AnalyseData:
     def __init__(self,
@@ -44,6 +46,10 @@ class AnalyseData:
             TouchFrame = ETS_Dataframe(file_path=touch_file_path, Header_index=Header_index)
             self.TouchFrameSets.append(TouchFrame)
             print(f"successfull load file {touch_file_path}")
+
+    # ********************************************************
+    # ***********MCT Field ***********************************
+    # ********************************************************
 
     @property
     def mct_noise_p2p_grid(self):
@@ -110,15 +116,15 @@ class AnalyseData:
         return ret
 
     @property
-    def all_signal_max(self):
+    def all_mct_signal_max(self):
         return [TouchData.mct_signal_max for TouchData in self.TouchFrameSets]
 
     @property
-    def all_signal_min(self):
+    def all_mct_signal_min(self):
         return [TouchData.mct_signal_min for TouchData in self.TouchFrameSets]
 
     @property
-    def all_signal_mean(self):
+    def all_mct_signal_mean(self):
         return [TouchData.mct_signal_mean for TouchData in self.TouchFrameSets]
 
     @property
@@ -230,7 +236,7 @@ class AnalyseData:
         return [20 * np.log10(val) for val in self.all_SmaxNppfullscreenR]
 
     @property
-    def all_SmaxNrmsR(self):
+    def all_SmeanNrmsR(self):
         ret = []
         for TouchFrame in self.TouchFrameSets:
             _, y_node, x_node = TouchFrame.mct_signal_position
@@ -240,38 +246,416 @@ class AnalyseData:
         return ret
 
     @property
-    def all_SmaxNrmsR_dB(self):
+    def all_SmeanNrmsR_dB(self):
 
-        return [20 * np.log10(val) for val in self.all_SmaxNrmsR]
+        return [20 * np.log10(val) for val in self.all_SmeanNrmsR]
+
+    # ********************************************************
+    # ***********SCT ROW Field *******************************
+    # ********************************************************
+
+    @property
+    def sct_row_noise_p2p_line(self):
+        return self.NoTouchFrame.sct_row_p2p
+
+    @property
+    def sct_row_p2p_max(self):
+        return self.NoTouchFrame.sct_row_p2p.max()
+
+    @property
+    def sct_row_p2p_mean(self):
+        return self.NoTouchFrame.sct_row_p2p.mean()
+
+    @property
+    def sct_row_p2p_min(self):
+        return self.NoTouchFrame.sct_row_p2p.min()
+
+    # ********************************************************
+    # ***********SCT COL Field *******************************
+    # ********************************************************
+
+    @property
+    def sct_col_noise_p2p_line(self):
+        return self.NoTouchFrame.sct_col_p2p
+
+    @property
+    def sct_col_p2p_max(self):
+        return self.NoTouchFrame.sct_col_p2p.max()
+
+    @property
+    def sct_col_p2p_mean(self):
+        return self.NoTouchFrame.sct_col_p2p.mean()
+
+    @property
+    def sct_col_p2p_min(self):
+        return self.NoTouchFrame.sct_col_p2p.min()
+
+    # ********************************************************
+    # ***********SCT Results Field ([row],[col]) *******************************
+    # ********************************************************
+
+    @property
+    def all_sct_touched_position(self):
+        """
+        return the position of max value from all frames as touch node position
+        :return: list node [[node1_x, node1_y] [node2_x node2_y] ...]
+        """
+        ret_row = []
+        ret_col = []
+
+        for TouchFrame in self.TouchFrameSets:
+            _, x_node = TouchFrame.sct_row_signal_position
+            ret_row.append(x_node)
+
+        for TouchFrame in self.TouchFrameSets:
+            _, y_node = TouchFrame.sct_col_signal_position
+            ret_col.append(y_node)
+
+        return [ret_row, ret_col]
+
+    @property
+    def all_sct_noise_p2p_notouch_node(self):
+        """
+        The noise is taken from no touch peak-peak grid data at touched position
+        :return: list node [node1 node2 ...]
+        """
+        ret_row = []
+        ret_col = []
+
+        for TouchFrame in self.TouchFrameSets:
+            _, x_node = TouchFrame.sct_row_signal_position
+            ret_row.append(self.NoTouchFrame.sct_row_p2p[x_node])
+
+        for TouchFrame in self.TouchFrameSets:
+            _, y_node = TouchFrame.sct_col_signal_position
+            ret_col.append(self.NoTouchFrame.sct_col_p2p[y_node])
+
+        return [ret_row, ret_col]
+
+    @property
+    def all_sct_noise_p2p_touch_node(self):
+        """
+        The noise is taken from touch peak-peak grid data at touched position
+        :return: list node [node1 node2 ...]
+        """
+        ret_row = []
+        ret_col = []
+
+        for TouchFrame in self.TouchFrameSets:
+            _, x_node = TouchFrame.sct_row_signal_position
+            ret_row.append(TouchFrame.sct_row_p2p[x_node])
+
+        for TouchFrame in self.TouchFrameSets:
+            _, y_node = TouchFrame.sct_col_signal_position
+            ret_col.append(TouchFrame.sct_col_p2p[y_node])
+
+        return [ret_row, ret_col]
+
+    @property
+    def all_sct_noise_rms_touch(self):
+        """
+        The noise is taken from rms noise (in touch raw data) grid data at touched position
+        :return: list node [node1 node2 ...]
+        """
+        ret_row = []
+        ret_col = []
+
+        for TouchFrame in self.TouchFrameSets:
+            _, x_node = TouchFrame.sct_row_signal_position
+            ret_row.append(TouchFrame.sct_row_rms[x_node])
+
+        for TouchFrame in self.TouchFrameSets:
+            _, y_node = TouchFrame.sct_col_signal_position
+            ret_col.append(TouchFrame.sct_col_rms[y_node])
+
+        return [ret_row, ret_col]
+
+    @property
+    def all_sct_signal_max(self):
+        ret_row = [TouchData.sct_row_signal_max for TouchData in self.TouchFrameSets]
+        ret_col = [TouchData.sct_col_signal_max for TouchData in self.TouchFrameSets]
+        return [ret_row, ret_col]
+
+    @property
+    def all_sct_signal_min(self):
+        ret_row = [TouchData.sct_row_signal_min for TouchData in self.TouchFrameSets]
+        ret_col = [TouchData.sct_col_signal_min for TouchData in self.TouchFrameSets]
+        return [ret_row, ret_col]
+
+    @property
+    def all_sct_signal_mean(self):
+        ret_row = [TouchData.sct_row_signal_mean for TouchData in self.TouchFrameSets]
+        ret_col = [TouchData.sct_col_signal_mean for TouchData in self.TouchFrameSets]
+        return [ret_row, ret_col]
+
+    @property
+    def all_sct_SminNppnotouchR(self):
+        """
+        (using in Huawei SNppR)
+        Using min signal from touch raw data as signal, and peak-peak noise in no touch raw data at touched node as noise
+        :return: list of SNR [node1 node2 ...]
+        """
+        ret_row = []
+        ret_col = []
+
+        for TouchFrame in self.TouchFrameSets:
+            _, x_node = TouchFrame.sct_row_signal_position
+            SminNppnotouchR = TouchFrame.sct_row_signal_min / self.NoTouchFrame.sct_row_p2p[x_node]
+            ret_row.append(SminNppnotouchR)
+
+        for TouchFrame in self.TouchFrameSets:
+            _, y_node = TouchFrame.sct_col_signal_position
+            SminNppnotouchR = TouchFrame.sct_col_signal_min / self.NoTouchFrame.sct_col_p2p[y_node]
+            ret_col.append(SminNppnotouchR)
+
+        return [ret_row, ret_col]
+
+    @property
+    def all_sct_SmeanNppnotouchR(self):
+        '''
+        (using in Huawei SNppR)
+        Using average signal from touch raw data as signal, and peak-peak noise in no touch raw data at touched node as noise
+        :return: list of SNR [node1 node2 ...]
+        '''
+
+        ret_row = []
+        ret_col = []
+        # calculate sct row SmeanNppnotouchR
+        for TouchFrame in self.TouchFrameSets:
+            _, x_node = TouchFrame.sct_row_signal_position
+            SmeanNppnotouchR = TouchFrame.sct_row_signal_mean / self.NoTouchFrame.sct_row_p2p[x_node]
+            ret_row.append(SmeanNppnotouchR)
+
+        # calculate sct col SmeanNppnotouchR
+        for TouchFrame in self.TouchFrameSets:
+            _, y_node = TouchFrame.sct_col_signal_position
+            SmeanNppnotouchR = TouchFrame.sct_col_signal_mean / self.NoTouchFrame.sct_col_p2p[y_node]
+            ret_col.append(SmeanNppnotouchR)
+
+        return [ret_row, ret_col]
+
+    @property
+    def all_sct_SmaxNppnotouchR(self):
+        '''
+        (using in BOE SNppR) Using max signal from touch raw data as signal, and peak-peak noise in no touch raw data
+        at touched node as noise :return: list of SNR [node1 node2 ...]
+        '''
+        ret_row = []
+        ret_col = []
+
+        for TouchFrame in self.TouchFrameSets:
+            _, x_node = TouchFrame.sct_row_signal_position
+            SmaxNppnotouchR = TouchFrame.sct_row_signal_max / self.NoTouchFrame.sct_row_p2p[x_node]
+            ret_row.append(SmaxNppnotouchR)
+
+        for TouchFrame in self.TouchFrameSets:
+            _, y_node = TouchFrame.sct_col_signal_position
+            SmaxNppnotouchR = TouchFrame.sct_col_signal_max / self.NoTouchFrame.sct_col_p2p[y_node]
+            ret_col.append(SmaxNppnotouchR)
+
+        return [ret_row, ret_col]
+
+    @property
+    def all_sct_SminNpptouchR(self):
+        '''
+        (using in Huawei quick test)
+        Using min signal from touch raw data as signal, and peak-peak noise in touch raw data at touched node as noise
+        :return: list of SNR [node1 node2 ...]
+        '''
+        ret_row = []
+        ret_col = []
+
+        for TouchFrame in self.TouchFrameSets:
+            _, x_node = TouchFrame.sct_row_signal_position
+            SminNpptouchR = TouchFrame.sct_row_signal_min / TouchFrame.sct_row_p2p[x_node]
+            ret_row.append(SminNpptouchR)
+
+        for TouchFrame in self.TouchFrameSets:
+            _, y_node = TouchFrame.sct_col_signal_position
+            SminNpptouchR = TouchFrame.sct_col_signal_min / TouchFrame.sct_col_p2p[y_node]
+            ret_col.append(SminNpptouchR)
+
+        return [ret_row, ret_col]
+
+    @property
+    def all_sct_SmaxNppnotouchR_dB(self):
+        ret_row = [20 * np.log10(val) for val in self.all_sct_SmaxNppnotouchR[0]]
+        ret_col = [20 * np.log10(val) for val in self.all_sct_SmaxNppnotouchR[1]]
+        return [ret_row, ret_col]
+
+    @property
+    def all_sct_SminNpptouchR_dB(self):
+        """
+        (using in Huawei quick test)
+        Using min signal from touch raw data as signal, and peak-peak noise in touch raw data at touched node as noise
+        :return: list of SNR [node1 node2 ...]
+        """
+        ret_row = [20 * np.log10(val) for val in self.all_sct_SminNpptouchR[0]]
+        ret_col = [20 * np.log10(val) for val in self.all_sct_SminNpptouchR[1]]
+        return [ret_row, ret_col]
+
+    @property
+    def all_sct_SminNppnotouchR_dB(self):
+        """
+        (using in Huawei SNppR test)
+        Using min signal from touch raw data as signal, and peak-peak noise in no touch raw data at touched node as noise
+        :return: list of SNR [node1 node2 ...]
+        """
+
+        ret_row = [20 * np.log10(val) for val in self.all_sct_SminNppnotouchR[0]]
+        ret_col = [20 * np.log10(val) for val in self.all_sct_SminNppnotouchR[1]]
+        return [ret_row, ret_col]
+
+    @property
+    def all_sct_SmeanNppnotouchR_dB(self):
+        """
+        (using in Huawei SNppR test)
+        Using mean signal from touch raw data as signal, and peak-peak noise in no touch raw data at touched node as noise
+        :return: list of SNR [node1 node2 ...]
+        """
+        ret_row = [20 * np.log10(val) for val in self.all_sct_SmeanNppnotouchR[0]]
+        ret_col = [20 * np.log10(val) for val in self.all_sct_SmeanNppnotouchR[1]]
+        return [ret_row, ret_col]
+
+    @property
+    def all_sct_SmaxNppfullscreenR(self):
+
+        ret_row = []
+        ret_col = []
+
+        for TouchFrame in self.TouchFrameSets:
+            SmaxNppfullscreenR = TouchFrame.sct_row_signal_max / self.NoTouchFrame.sct_row_p2p.max()
+            ret_row.append(SmaxNppfullscreenR)
+
+        for TouchFrame in self.TouchFrameSets:
+            SmaxNppfullscreenR = TouchFrame.sct_col_signal_max / self.NoTouchFrame.sct_col_p2p.max()
+            ret_col.append(SmaxNppfullscreenR)
+
+        return [ret_row, ret_col]
+
+    @property
+    def all_sct_SmaxNppfullscreenR_dB(self):
+
+        ret_row = [20 * np.log10(val) for val in self.all_sct_SmaxNppfullscreenR[0]]
+        ret_col = [20 * np.log10(val) for val in self.all_sct_SmaxNppfullscreenR[1]]
+        return [ret_row, ret_col]
+
+    @property
+    def all_sct_SmeanNrmsR(self):
+
+        ret_row = []
+        ret_col = []
+
+        for TouchFrame in self.TouchFrameSets:
+            _, x_node = TouchFrame.sct_row_signal_position
+            SmeanNrmsR = TouchFrame.sct_row_signal_mean / TouchFrame.sct_row_rms[x_node]
+            ret_row.append(SmeanNrmsR)
+
+        for TouchFrame in self.TouchFrameSets:
+            _, y_node = TouchFrame.sct_col_signal_position
+            SmeanNrmsR = TouchFrame.sct_col_signal_mean / TouchFrame.sct_col_rms[y_node]
+            ret_col.append(SmeanNrmsR)
+
+        return [ret_row, ret_col]
+
+    @property
+    def all_sct_SmeanNrmsR_dB(self):
+
+        ret_row = [20 * np.log10(val) for val in self.all_sct_SmeanNrmsR[0]]
+        ret_col = [20 * np.log10(val) for val in self.all_sct_SmeanNrmsR[1]]
+        return [ret_row, ret_col]
 
     def BOE_snr_summary(self):
+        ret = {"Vendor": "BOE"}
+        if self.NoTouchFrame.mct_grid is not None:
+            min_SmaxNppfullscreenR_dB = min(self.all_SmaxNppfullscreenR_dB)
+            min_SmaxNppfullscreenR_dB_index = self.all_SmaxNppfullscreenR_dB.index(min(self.all_SmaxNppfullscreenR_dB))
+            min_SmeanNrmsR_dB = min(self.all_SmeanNrmsR_dB)
+            min_SmeanNrmsR_dB_index = self.all_SmeanNrmsR_dB.index(min(self.all_SmeanNrmsR_dB))
+            mct_ret = {
+                "snr_summary": {
+                    "touched node": self.all_touched_position,
+                    "noise_p2p_fullscreen": [self.mct_noise_p2p_max] * len(self.TouchFrameSets),
+                    "noise_p2p_notouch": self.all_mct_noise_p2p_notouch_node,
+                    "noise_rms_touch": self.all_mct_noise_rms_touch,
+                    "signal_max": self.all_mct_signal_max,
+                    "signal_mean": self.all_mct_signal_mean,
+                    "SmaxNppmotouchR": self.all_SmaxNppnotouchR,
+                    "SmaxNppnotouchR_dB": self.all_SmaxNppnotouchR_dB,
+                    "SmaxNppfullscreenR": self.all_SmaxNppfullscreenR,
+                    "SmaxNppfullscreenR_dB": self.all_SmaxNppfullscreenR_dB,
+                    "SmaxNrmsR": self.all_SmeanNrmsR,
+                    "SmeanNrmsR_dB": self.all_SmeanNrmsR_dB
+                },
+                "final_results": {
+                    "min_SmaxNppfullscreenR_dB": "{:.2f}".format(min_SmaxNppfullscreenR_dB),
+                    "Position_P2P": f"Touch {min_SmaxNppfullscreenR_dB_index + 1}",
+                    "min_SmeanNrmsR_dB": "{:.2f}".format(min_SmeanNrmsR_dB),
+                    "Position_RMS": f"Touch {min_SmeanNrmsR_dB_index + 1}"
+                }
+            }
+            ret["mct_summary"] = mct_ret
 
-        min_SmaxNppfullscreenR_dB = min(self.all_SmaxNppfullscreenR_dB)
-        min_SmaxNppfullscreenR_dB_index = self.all_SmaxNppfullscreenR_dB.index(min(self.all_SmaxNppfullscreenR_dB))
-        min_SmeanNrmsR_dB = min(self.all_SmaxNrmsR_dB)
-        min_SmeanNrmsR_dB_index = self.all_SmaxNrmsR_dB.index(min(self.all_SmaxNrmsR_dB))
-        ret = {"Vendor": "BOE",
-               "snr_summary": {
-                   "touched node": self.all_touched_position,
-                   "noise_p2p_fullscreen": [self.mct_noise_p2p_max] * len(self.TouchFrameSets),
-                   "noise_p2p_notouch": self.all_mct_noise_p2p_notouch_node,
-                   "noise_rms_touch": self.all_mct_noise_rms_touch,
-                   "signal_max": self.all_signal_max,
-                   "signal_mean": self.all_signal_mean,
-                   "SmaxNppmotouchR": self.all_SmaxNppnotouchR,
-                   "SmaxNppnotouchR_dB": self.all_SmaxNppnotouchR_dB,
-                   "SmaxNppfullscreenR": self.all_SmaxNppfullscreenR,
-                   "SmaxNppfullscreenR_dB": self.all_SmaxNppfullscreenR_dB,
-                   "SmaxNrmsR": self.all_SmaxNrmsR,
-                   "SmeanNrmsR_dB": self.all_SmaxNrmsR_dB
-               },
-               "final_results": {
-                   "min_SmaxNppfullscreenR_dB": "{:.2f}".format(min_SmaxNppfullscreenR_dB),
-                   "Position_P2P": f"Touch {min_SmaxNppfullscreenR_dB_index + 1}",
-                   "min_SmeanNrmsR_dB": "{:.2f}".format(min_SmeanNrmsR_dB),
-                   "Position_RMS": f"Touch {min_SmeanNrmsR_dB_index + 1}"
-               }
-               }
+        if self.NoTouchFrame.sct_row is not None:
+            min_sct_row_SmaxNppfullscreenR_dB = min(self.all_sct_SmaxNppfullscreenR_dB[0])
+            min_sct_row_SmaxNppfullscreenR_dB_index = self.all_sct_SmaxNppfullscreenR_dB[0].index(
+                min(self.all_sct_SmaxNppfullscreenR_dB[0]))
+            min_sct_row_SmeanNrmsR_dB = min(self.all_sct_SmeanNrmsR_dB[0])
+            min_sct_row_SmeanNrmsR_dB_index = self.all_sct_SmeanNrmsR_dB[0].index(min(self.all_sct_SmeanNrmsR_dB[0]))
+
+            sct_row_ret = {
+                "snr_sct_row_summary": {
+                    "touched node": self.all_sct_touched_position[0],
+                    "noise_p2p_fullscreen": [self.sct_row_p2p_max] * len(self.TouchFrameSets),
+                    "noise_p2p_notouch": self.all_sct_noise_p2p_notouch_node[0],
+                    "noise_rms_touch": self.all_sct_noise_rms_touch[0],
+                    "signal_max": self.all_sct_signal_max[0],
+                    "signal_mean": self.all_sct_signal_mean[0],
+                    "SmaxNppmotouchR": self.all_sct_SmaxNppnotouchR[0],
+                    "SmaxNppnotouchR_dB": self.all_sct_SmaxNppnotouchR_dB[0],
+                    "SmaxNppfullscreenR": self.all_sct_SmaxNppfullscreenR[0],
+                    "SmaxNppfullscreenR_dB": self.all_sct_SmaxNppfullscreenR_dB[0],
+                    "SmaxNrmsR": self.all_sct_SmeanNrmsR[0],
+                    "SmeanNrmsR_dB": self.all_sct_SmeanNrmsR_dB[0]
+                },
+                "final_results": {
+                    "min_sct_row_SmaxNppfullscreenR_dB": "{:.2f}".format(min_sct_row_SmaxNppfullscreenR_dB),
+                    "Position_P2P": f"Touch {min_sct_row_SmaxNppfullscreenR_dB_index + 1}",
+                    "min_sct_row_SmeanNrmsR_dB": "{:.2f}".format(min_sct_row_SmeanNrmsR_dB),
+                    "Position_RMS": f"Touch {min_sct_row_SmeanNrmsR_dB_index + 1}"
+                }
+            }
+            ret["sct_row_summary"] = sct_row_ret
+
+        if self.NoTouchFrame.sct_col is not None:
+            min_sct_col_SmaxNppfullscreenR_dB = min(self.all_sct_SmaxNppfullscreenR_dB[1])
+            min_sct_col_SmaxNppfullscreenR_dB_index = self.all_sct_SmaxNppfullscreenR_dB[1].index(
+                min(self.all_sct_SmaxNppfullscreenR_dB[1]))
+            min_sct_col_SmeanNrmsR_dB = min(self.all_sct_SmeanNrmsR_dB[1])
+            min_sct_col_SmeanNrmsR_dB_index = self.all_sct_SmeanNrmsR_dB[1].index(min(self.all_sct_SmeanNrmsR_dB[1]))
+            sct_col_ret = {
+                "snr_sct_col_summary": {
+                    "touched node": self.all_sct_touched_position[1],
+                    "noise_p2p_fullscreen": [self.sct_col_p2p_max] * len(self.TouchFrameSets),
+                    "noise_p2p_notouch": self.all_sct_noise_p2p_notouch_node[1],
+                    "noise_rms_touch": self.all_sct_noise_rms_touch[1],
+                    "signal_max": self.all_sct_signal_max[1],
+                    "signal_mean": self.all_sct_signal_mean[1],
+                    "SmaxNppmotouchR": self.all_sct_SmaxNppnotouchR[1],
+                    "SmaxNppnotouchR_dB": self.all_sct_SmaxNppnotouchR_dB[1],
+                    "SmaxNppfullscreenR": self.all_sct_SmaxNppfullscreenR[1],
+                    "SmaxNppfullscreenR_dB": self.all_sct_SmaxNppfullscreenR_dB[1],
+                    "SmaxNrmsR": self.all_sct_SmeanNrmsR[1],
+                    "SmeanNrmsR_dB": self.all_sct_SmeanNrmsR_dB[1]
+                },
+                "final_results": {
+                    "min_sct_col_SmaxNppfullscreenR_dB": "{:.2f}".format(min_sct_col_SmaxNppfullscreenR_dB),
+                    "Position_P2P": f"Touch {min_sct_col_SmaxNppfullscreenR_dB_index + 1}",
+                    "min_sct_col_SmeanNrmsR_dB": "{:.2f}".format(min_sct_col_SmeanNrmsR_dB),
+                    "Position_RMS": f"Touch {min_sct_col_SmeanNrmsR_dB_index + 1}"
+                }
+            }
+            ret["sct_col_summary"] = sct_col_ret
 
         return ret
 
@@ -281,23 +665,24 @@ class AnalyseData:
         only peak-peak snr is calculated!!
         :return:
         '''
+        ret = {"Vendor": "Huawei_quick"}
 
         min_SminNpptouch_dB = min(self.all_SminNpptouchR_dB)
         min_SminNpptouch_dB_index = self.all_SminNpptouchR_dB.index(min(self.all_SminNpptouchR_dB))
-        ret = {"Vendor": "Huawei_quick",
-               "snr_summary": {
-                   "touched node": self.all_touched_position,
-                   "noise_p2p_touch": self.all_mct_noise_p2p_touch_node,
-                   "signal_min": self.all_signal_min,
-                   "SminNpptouchR": self.all_SminNpptouchR,
-                   "SminNpptouchR_dB": self.all_SminNpptouchR_dB,
-               },
-               "final_results": {
-                   "min_SminNpptouch_dB": "{:.2f}".format(min_SminNpptouch_dB),
-                   "min_SminNpptouch_dB_index": f"Touch {min_SminNpptouch_dB_index + 1}",
-               }
-               }
-
+        mct_ret = {
+            "snr_summary": {
+                "touched node": self.all_touched_position,
+                "noise_p2p_touch": self.all_mct_noise_p2p_touch_node,
+                "signal_min": self.all_mct_signal_min,
+                "SminNpptouchR": self.all_SminNpptouchR,
+                "SminNpptouchR_dB": self.all_SminNpptouchR_dB,
+            },
+            "final_results": {
+                "min_SminNpptouch_dB": "{:.2f}".format(min_SminNpptouch_dB),
+                "min_SminNpptouch_dB_index": f"Touch {min_SminNpptouch_dB_index + 1}",
+            }
+        }
+        ret["mct_summary"] = mct_ret
         return ret
 
     def HW_thp_afe_snr_summary(self):
@@ -306,53 +691,96 @@ class AnalyseData:
         only peak-peak snr is calculated!!
         :return:
         '''
+        ret = {"Vendor": "Huawei_quick"}
 
         min_SminNppnotouch_dB = min(self.all_SminNppnotouchR_dB)
         min_SminNppnotouch_dB_index = self.all_SminNppnotouchR_dB.index(min(self.all_SminNppnotouchR_dB))
         min_SmeanNppnotouch_dB = min(self.all_SmeanNppnotouchR_dB)
         min_SmeanNppnotouch_dB_index = self.all_SmeanNppnotouchR_dB.index(min(self.all_SmeanNppnotouchR_dB))
-        ret = {"Vendor": "Huawei_THP_AFE",
-               "snr_summary": {
-                   "touched node": self.all_touched_position,
-                   "noise_p2p_notouch": self.all_mct_noise_p2p_notouch_node,
-                   "signal_min": self.all_signal_min,
-                   "signal_mean": self.all_signal_mean,
-                   "SminNppnotouchR": self.all_SminNppnotouchR,
-                   "SminNppnotouchR_dB": self.all_SminNppnotouchR_dB,
-                   "SmeanNppnotouchR": self.all_SmeanNppnotouchR,
-                   "SmeanNppnotouchR_dB": self.all_SmeanNppnotouchR_dB,
-               },
-               "final_results": {
-                   "min_SminNppnotouch_dB": "{:.2f}".format(min_SminNppnotouch_dB),
-                   "min_SminNppnotouch_dB_index": f"Touch {min_SminNppnotouch_dB_index + 1}",
-                   "min_SmeanNppnotouch_dB": "{:.2f}".format(min_SmeanNppnotouch_dB),
-                   "min_SmeanNppnotouch_dB_index": f"Touch {min_SmeanNppnotouch_dB_index + 1}",
-               }
-               }
-
+        mct_ret = {
+            "snr_summary": {
+                "touched node": self.all_touched_position,
+                "noise_p2p_notouch": self.all_mct_noise_p2p_notouch_node,
+                "signal_min": self.all_mct_signal_min,
+                "signal_mean": self.all_mct_signal_mean,
+                "SminNppnotouchR": self.all_SminNppnotouchR,
+                "SminNppnotouchR_dB": self.all_SminNppnotouchR_dB,
+                "SmeanNppnotouchR": self.all_SmeanNppnotouchR,
+                "SmeanNppnotouchR_dB": self.all_SmeanNppnotouchR_dB,
+            },
+            "final_results": {
+                "min_SminNppnotouch_dB": "{:.2f}".format(min_SminNppnotouch_dB),
+                "min_SminNppnotouch_dB_index": f"Touch {min_SminNppnotouch_dB_index + 1}",
+                "min_SmeanNppnotouch_dB": "{:.2f}".format(min_SmeanNppnotouch_dB),
+                "min_SmeanNppnotouch_dB_index": f"Touch {min_SmeanNppnotouch_dB_index + 1}",
+            }
+        }
+        ret["mct_summary"] = mct_ret
         return ret
 
     def write_out_csv(self, result_dict):
 
         row = ["Touch {}".format(idx + 1) for idx in range(len(self.TouchFrameSets))]
-
-        data_out = pd.DataFrame(index=row,
-                                data=result_dict["snr_summary"])
-        # print(data_out)
-        data_out = data_out.round(2)
-        # print(data_out)
         output_path = os.path.join(self.output_folder, result_dict["Vendor"] + "_" + self.pattern + "_output_info.csv")
 
-        data_out.to_csv(output_path)
+        with open(output_path, 'w', newline='') as f:
 
-        with open(output_path, 'a+', newline='') as f:
-            csv_write = csv.writer(f)
+            if self.NoTouchFrame.mct_grid is not None:
+                data_out = pd.DataFrame(index=row,
+                                        data=result_dict["mct_summary"]["snr_summary"])
+                # print(data_out)
+                data_out = data_out.round(2)
+                # print(data_out)
+                csv_write = csv.writer(f)
+                csv_write.writerow(["MCT Summary"])
+                data_out.to_csv(f)
 
-            csv_write.writerow("\n")
+            if self.NoTouchFrame.sct_row is not None:
+                data_out = pd.DataFrame(index=row,
+                                        data=result_dict["sct_row_summary"]["snr_sct_row_summary"])
+                data_out = data_out.round(2)
+                csv_write = csv.writer(f)
+                csv_write.writerow("\n")
+                csv_write.writerow(["SCT Row Summary"])
 
-            csv_write.writerow(["Final Result:"])
-            for x, y in zip(list(result_dict["final_results"].keys()), list(result_dict["final_results"].values())):
-                csv_write.writerow([x, y])
+                data_out.to_csv(f)
+
+            if self.NoTouchFrame.sct_col is not None:
+                data_out = pd.DataFrame(index=row,
+                                        data=result_dict["sct_col_summary"]["snr_sct_col_summary"])
+                data_out = data_out.round(2)
+                csv_write = csv.writer(f)
+                csv_write.writerow("\n")
+                csv_write.writerow(["SCT Column Summary"])
+                data_out.to_csv(f)
+
+        if os.path.exists(output_path):
+            with open(output_path, 'a+', newline='') as f:
+                csv_write = csv.writer(f)
+
+                if self.NoTouchFrame.mct_grid is not None:
+                    csv_write.writerow("\n")
+
+                    csv_write.writerow(["Final Result MCT:"])
+                    for x, y in zip(list(result_dict["mct_summary"]["final_results"].keys()),
+                                    list(result_dict["mct_summary"]["final_results"].values())):
+                        csv_write.writerow([x, y])
+
+                if self.NoTouchFrame.sct_row is not None:
+                    csv_write.writerow("\n")
+
+                    csv_write.writerow(["Final Result SCT Row:"])
+                    for x, y in zip(list(result_dict["sct_row_summary"]["final_results"].keys()),
+                                    list(result_dict["sct_row_summary"]["final_results"].values())):
+                        csv_write.writerow([x, y])
+
+                if self.NoTouchFrame.sct_col is not None:
+                    csv_write.writerow("\n")
+
+                    csv_write.writerow(["Final Result SCT Col:"])
+                    for x, y in zip(list(result_dict["sct_col_summary"]["final_results"].keys()),
+                                    list(result_dict["sct_col_summary"]["final_results"].values())):
+                        csv_write.writerow([x, y])
 
     def write_out_decode_mct_csv(self):
 
@@ -526,16 +954,16 @@ def get_touched_num(folder, prefix):
 
     return ret
 
-def write_out_final_result_csv(folder,data):
 
+def write_out_final_result_csv(folder, data):
     # write out No Touch grid mct raw data
     out_path = os.path.join(folder, "result_summary.csv")
     with open(out_path, 'w', encoding='UTF8', newline='') as f:
         writer = csv.writer(f)
         # write a row to the csv file
-        writer.writerow(["pattern", "SNppR Fullscreen", "SNrmsR Fullscreen"])
+        writer.writerow(["pattern (fullscreen)", "SNppR MCT", "SNrmsR MCT", "SNppR SCT Row",
+                         "SNrmsR SCT Row","SNppR SCT Col", "SNrmsR SCT Col"])
         for idx, line in enumerate(data):
-
             li = list(line)
             writer.writerow(li)
 
@@ -629,15 +1057,14 @@ if __name__ == '__main__':
         prefix_notouch = opts.prefix_notouch
         prefix_touch = opts.prefix_touch
 
-        if os.path.exists(os.path.join(opts.dataset,pattern, "{}.edl.csv".format(prefix_notouch))):
-            notouch_data_path = os.path.join(opts.dataset,pattern, "{}.edl.csv".format(prefix_notouch))
-            touch_path = os.path.join(opts.dataset,pattern, prefix_touch + "{}.edl.csv")
+        if os.path.exists(os.path.join(opts.dataset, pattern, "{}.edl.csv".format(prefix_notouch))):
+            notouch_data_path = os.path.join(opts.dataset, pattern, "{}.edl.csv".format(prefix_notouch))
+            touch_path = os.path.join(opts.dataset, pattern, prefix_touch + "{}.edl.csv")
         else:
-            notouch_data_path = os.path.join(opts.dataset,pattern, "{}.csv".format(prefix_notouch))
-            touch_path = os.path.join(opts.dataset,pattern, prefix_touch + "{}.csv")
+            notouch_data_path = os.path.join(opts.dataset, pattern, "{}.csv".format(prefix_notouch))
+            touch_path = os.path.join(opts.dataset, pattern, prefix_touch + "{}.csv")
 
-        touch_list = get_touched_num(os.path.join(opts.dataset,pattern), prefix_touch)
-
+        touch_list = get_touched_num(os.path.join(opts.dataset, pattern), prefix_touch)
 
         # match touch raw data file
         touch_data_path_list = [touch_path.format(i) for i in touch_list]
@@ -657,8 +1084,25 @@ if __name__ == '__main__':
             # "Position_P2P": f"Touch {min_SmaxNppfullscreenR_dB_index + 1}",
             # "min_SmeanNrmsR_dB": "{:.2f}".format(min_SmeanNrmsR_dB),
             # "Position_RMS": f"Touch {min_SmeanNrmsR_dB_index + 1}"
-            final_results.append([pattern,BOE_ret["final_results"]["min_SmaxNppfullscreenR_dB"],BOE_ret["final_results"]["min_SmeanNrmsR_dB"]])
+            tmp_res = [pattern]
+            if BOE_ret.get("mct_summary", None) is not None:
+                tmp_res.extend([ BOE_ret["mct_summary"]["final_results"]["min_SmaxNppfullscreenR_dB"],
+                                BOE_ret["mct_summary"]["final_results"]["min_SmeanNrmsR_dB"]])
+            else:
+                tmp_res.extend(["NaN", "NaN"])
 
+            if BOE_ret.get("sct_row_summary", None) is not None:
+                tmp_res.extend([BOE_ret["sct_row_summary"]["final_results"]["min_sct_row_SmaxNppfullscreenR_dB"],
+                                BOE_ret["sct_row_summary"]["final_results"]["min_sct_row_SmeanNrmsR_dB"]])
+            else:
+                tmp_res.extend(["NaN", "NaN"])
+
+            if BOE_ret.get("sct_col_summary", None) is not None:
+                tmp_res.extend([BOE_ret["sct_col_summary"]["final_results"]["min_sct_col_SmaxNppfullscreenR_dB"],
+                                BOE_ret["sct_col_summary"]["final_results"]["min_sct_col_SmeanNrmsR_dB"]])
+            else:
+                tmp_res.extend(["NaN", "NaN"])
+            final_results.append(tmp_res)
         if "Huawei_quick" in opts.report_vendor:
             DataAnalyse.write_out_csv(DataAnalyse.HW_quick_snr_summary())
 
@@ -684,7 +1128,6 @@ if __name__ == '__main__':
         if opts.plot_noise_p2p_annotated:
             DataAnalyse.plot_mct_noise_p2p_annotated()
 
-
         print(f"Already successful finish {pattern} !!!!!!!!!!!!!!")
 
-    write_out_final_result_csv(opts.dataset,final_results)
+    write_out_final_result_csv(opts.dataset, final_results)

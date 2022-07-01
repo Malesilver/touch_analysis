@@ -94,16 +94,28 @@ class ETS_Dataframe:
                     row_raw.append(row_data)
         f.close()
 
-        # find the tx num and rx num using re
-        Rx, Tx = re.findall(r"[\[](.*?)[\]]", header[self.Header_index[MCT_DELTAGEN_DATA][4]])
-        self.row_num = int(Rx) + 1
-        self.col_num = int(Tx) + 1
+        # header[self.Header_index[MCT_DELTAGEN_DATA][4]]) : [row][col]
+        # header[self.Header_index[SCTX_DELTAGEN_DATA][4]] : [row]
+        # header[self.Header_index[SCTY_DELTAGEN_DATA][4]] : [col]
 
-        self.mct_grid = np.array(mutual_raw).reshape([len(mutual_raw), self.row_num, self.col_num])
-        # self.mct_grid = self.mct_grid[:300,:,:]
-        # print(f"using {self.mct_grid.shape[0]} frames for evaluation!!")
-        self.sct_row = np.array(row_raw)
-        self.sct_col = np.array(col_raw)
+        if self.Header_index[MCT_DELTAGEN_DATA][4] > self.Header_index[MCT_DELTAGEN_DATA][3]:  # if  mct data exist
+            # find the tx num and rx num using re
+            row, col = re.findall(r"[\[](.*?)[\]]", header[self.Header_index[MCT_DELTAGEN_DATA][4]])
+            self.row_num = int(row) + 1
+            self.col_num = int(col) + 1
+            self.mct_grid = np.array(mutual_raw).reshape([len(mutual_raw), self.row_num, self.col_num])
+            # self.mct_grid = self.mct_grid[:300,:,:]
+            # print(f"using {self.mct_grid.shape[0]} frames for evaluation!!")
+        else:  # only sct data
+            row = re.search(r"[\[](.*?)[\]]", header[self.Header_index[SCTX_DELTAGEN_DATA][4]]).group(1)
+            col = re.search(r"[\[](.*?)[\]]", header[self.Header_index[SCTY_DELTAGEN_DATA][4]]).group(1)
+            self.row_num = int(row) + 1
+            self.col_num = int(col) + 1
+
+        if self.Header_index[SCTX_DELTAGEN_DATA][4] > self.Header_index[SCTX_DELTAGEN_DATA][3]:  # if sct row data exist
+            self.sct_row = np.array(row_raw)
+        if self.Header_index[SCTY_DELTAGEN_DATA][4] > self.Header_index[SCTY_DELTAGEN_DATA][3]:  # if sct col data exist
+            self.sct_col = np.array(col_raw)
 
     # *******************************************************************
     # ************    mutual grid field *********************************
@@ -177,8 +189,8 @@ class ETS_Dataframe:
 
     @property
     def sct_row_signal_position(self):
-        n, y_node = np.unravel_index(self.sct_row.argmax(), self.sct_row.shape)
-        return n, y_node
+        n, x_node = np.unravel_index(self.sct_row.argmax(), self.sct_row.shape)
+        return n, x_node
 
     @property
     def sct_row_signal_max(self):
@@ -239,4 +251,3 @@ class ETS_Dataframe:
     def sct_col_signal_mean(self):
         _, y_node = self.sct_col_signal_position
         return self.sct_col_mean[y_node]
-
